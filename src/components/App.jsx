@@ -1,29 +1,96 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Header from './Layout/Header';
-import Footer from './Layout/Footer';
-import Dashboard from './Dashboard';
-import DiseaseScan from './DiseaseScan';
-import Irrigation from './Irrigation';
-import YieldForecast from './YieldForecast';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AppProvider, useApp } from '../context/AppContext';
+import AppShell from './layout/AppShell';
+import Login from '../pages/Login';
+import FieldSetup from '../pages/FieldSetup';
+import FieldOverview from '../pages/FieldOverview';
+import FieldDetails from '../pages/FieldDetails';
+import DiseaseScan from '../pages/DiseaseScan';
+import DiseaseResult from '../pages/DiseaseResult';
+import ReportProblem from '../pages/ReportProblem';
+import FieldHistory from '../pages/FieldHistory';
+import Irrigation from '../pages/Irrigation';
+import IrrigationHistory from '../pages/IrrigationHistory';
+import YieldForecast from '../pages/YieldForecast';
+import Notifications from '../pages/Notifications';
+import Profile from '../pages/Profile';
+import PropTypes from 'prop-types';
+
+function ProtectedRoute({ children, requireSetup = true }) {
+  const { isAuthenticated, setupComplete } = useApp();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (requireSetup && !setupComplete) return <Navigate to="/setup" replace />;
+  return children;
+}
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requireSetup: PropTypes.bool,
+};
+
+function PublicOnly({ children }) {
+  const { isAuthenticated, setupComplete } = useApp();
+  if (isAuthenticated && setupComplete) return <Navigate to="/app" replace />;
+  if (isAuthenticated && !setupComplete) return <Navigate to="/setup" replace />;
+  return children;
+}
+
+PublicOnly.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 /**
- * App shell — sticky header, routed pages, shared footer.
+ * AgroVision app — field-centered farm assistant with mock data.
  */
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="flex min-h-screen flex-col bg-bg">
-        <Header />
-        <main className="flex-1" id="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/disease-scan" element={<DiseaseScan />} />
-            <Route path="/irrigation" element={<Irrigation />} />
-            <Route path="/yield-forecast" element={<YieldForecast />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </BrowserRouter>
+    <AppProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          <Route
+            path="/login"
+            element={
+              <PublicOnly>
+                <Login />
+              </PublicOnly>
+            }
+          />
+
+          <Route
+            path="/setup"
+            element={
+              <ProtectedRoute requireSetup={false}>
+                <FieldSetup />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<FieldOverview />} />
+            <Route path="field-details" element={<FieldDetails />} />
+            <Route path="disease-scan" element={<DiseaseScan />} />
+            <Route path="disease-result" element={<DiseaseResult />} />
+            <Route path="report-problem" element={<ReportProblem />} />
+            <Route path="history" element={<FieldHistory />} />
+            <Route path="irrigation" element={<Irrigation />} />
+            <Route path="irrigation-history" element={<IrrigationHistory />} />
+            <Route path="yield" element={<YieldForecast />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AppProvider>
   );
 }

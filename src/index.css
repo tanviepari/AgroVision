@@ -4,16 +4,27 @@
   --color-primary: #1a5f4a;
   --color-primary-light: #2d7a62;
   --color-primary-dark: #134736;
+  --color-primary-soft: #e8f2ee;
   --color-success: #22c55e;
+  --color-success-soft: #dcfce7;
   --color-alert: #ef4444;
+  --color-alert-soft: #fee2e2;
   --color-warning: #f97316;
+  --color-warning-soft: #ffedd5;
   --color-earth: #a16207;
-  --color-bg: #f5f5f5;
-  --color-bg-warm: #fafaf9;
+  --color-earth-soft: #fef3c7;
+  --color-water: #0ea5e9;
+  --color-water-soft: #e0f2fe;
+  --color-bg: #f4f6f3;
+  --color-bg-warm: #fafaf7;
+  --color-sidebar: #143d32;
   --color-text-dark: #1f2937;
   --color-text-light: #6b7280;
+  --color-border: #e5e7eb;
   --font-serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
-  --font-sans: Inter, Poppins, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, sans-serif;
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
 }
 
 * {
@@ -35,6 +46,10 @@ body {
 
 #root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+}
+
+/* Soft leaf pattern for empty decorative areas */
+.leaf-pattern {
+  background-image: radial-gradient(circle at 20% 30%, rgb(26 95 74 / 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgb(161 98 7 / 0.05) 0%, transparent 35%);
 }

@@ -1,17 +1,17 @@
 # AgroVision
 
-Precision agriculture frontend for early disease detection, irrigation management, and yield forecasting.
+A friendly digital farm assistant — monitor fields, scan crops, manage irrigation, and estimate yield.
 
 ## Stack
 
 - React 19 + Vite
 - Tailwind CSS v4
-- React Router v6
-- Lucide React (icons)
-- Recharts (charts)
-- React Hook Form (upload validation)
+- React Router
+- Lucide React
+- Recharts
+- Mock data only (no backend)
 
-## Getting Started
+## Getting started
 
 ```bash
 npm install
@@ -20,19 +20,28 @@ npm run dev
 
 Open the URL shown in the terminal (typically `http://localhost:5173`).
 
-## Scripts
+## User flow
 
-| Command         | Description              |
-|-----------------|--------------------------|
-| `npm run dev`   | Start development server |
-| `npm run build` | Production build         |
-| `npm run preview` | Preview production build |
+1. **Login / Register** → `/login`
+2. **Field Setup** (after register) → `/setup`
+3. **Field Overview** → `/app`
+4. Disease Scan → Result → History
+5. Report Problem → History
+6. Irrigation → Irrigation History
+7. Yield Forecast
+8. Notifications · Profile
 
-## Pages
+Demo tip: on the login page use any credentials, or click **Skip to app** to jump in with the sample tomato field.
 
-- **Field Overview** (`/`) — Dashboard with weather, sectors, soil conditions
-- **Disease Scan** (`/disease-scan`) — Image upload + sample diagnostics
-- **Irrigation** (`/irrigation`) — Moisture cards, overrides, schedule
-- **Yield Forecast** (`/yield-forecast`) — Harvest prediction & recommendations
+## Project structure
 
-All data is hardcoded in `src/data/mockData.js` — no backend required.
+```
+src/
+├── context/AppContext.jsx   # Session state + mock mutations
+├── data/mockData.js         # Field-centered mock entities
+├── components/
+│   ├── common/              # Button, Card, EmptyState, …
+│   └── layout/              # Sidebar, AppShell, FieldSelector
+├── pages/                   # All screens
+└── components/App.jsx       # Routing
+```

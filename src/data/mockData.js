@@ -1,178 +1,278 @@
-// User & Weather
-export const userProfile = {
-  name: 'Sarah',
-  farmLocation: 'Farm Sector A',
+/**
+ * Centralized AgroVision mock data.
+ * Structured so UI can later swap this for API responses.
+ * Everything is keyed to a field where relevant.
+ */
+
+export const PROBLEM_TYPES = [
+  { id: 'yellow_leaves', label: 'Yellow leaves', icon: 'leaf' },
+  { id: 'pest', label: 'Pest problem', icon: 'bug' },
+  { id: 'drying', label: 'Crop drying', icon: 'sun' },
+  { id: 'slow_growth', label: 'Slow growth', icon: 'sprout' },
+  { id: 'too_much_water', label: 'Too much water', icon: 'droplets' },
+  { id: 'not_enough_water', label: 'Not enough water', icon: 'droplet' },
+  { id: 'other', label: 'Other', icon: 'help' },
+];
+
+export const CROP_OPTIONS = [
+  { id: 'tomato', label: 'Tomato' },
+  { id: 'wheat', label: 'Wheat' },
+  { id: 'corn', label: 'Corn' },
+  { id: 'rice', label: 'Rice' },
+  { id: 'cotton', label: 'Cotton' },
+  { id: 'soybean', label: 'Soybean' },
+];
+
+export const SOIL_OPTIONS = ['Loamy', 'Clay', 'Sandy', 'Silty', 'Peaty'];
+
+export const CROP_STAGES = [
+  'Seedling',
+  'Vegetative',
+  'Flowering',
+  'Fruiting',
+  'Maturity',
+  'Harvest ready',
+];
+
+export const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu'];
+
+/** Initial farmer profile */
+export const initialFarmer = {
+  id: 'farmer-1',
+  name: 'Ravi Kumar',
+  contact: '+91 98765 43210',
+  email: 'ravi@example.com',
+  location: 'Nashik, Maharashtra',
+  preferredLanguage: 'English',
+  farmName: 'Green Valley Farm',
 };
 
-export const weatherData = {
-  temperature: 24,
-  condition: 'Clear & Sunny',
-  humidity: 42,
-};
-
-// Dashboard
-export const fieldSectors = [
+/** Primary demo field — tomato */
+export const initialFields = [
   {
-    id: 1,
-    name: 'North Wheat Sector',
-    hectares: 14.2,
-    plantedDaysAgo: 42,
-    crop: 'Wheat',
-    moistureLevel: 42,
-    status: 'HEALTHY',
-    moistureLabel: 'Moisture Optimal (42%)',
-  },
-  {
-    id: 2,
-    name: 'East Corn Sector',
-    hectares: 28.5,
-    plantedDaysAgo: 12,
-    crop: 'Corn',
-    moistureLevel: 18,
-    status: 'NEEDS_WATER',
-    moistureLabel: 'Moisture Low (18%)',
-  },
-  {
-    id: 3,
-    name: 'South Soy Sector',
-    hectares: 10.0,
-    plantedDaysAgo: 0,
-    crop: 'Soybeans',
-    moistureLevel: 65,
-    status: 'ALERT',
-    moistureLabel: 'Risk Factor: Pest Suspected',
-    isPreHarvest: true,
+    id: 'field-1',
+    name: 'Green Valley Field',
+    location: 'Nashik, Maharashtra',
+    areaAcres: 1.5,
+    crop: 'Tomato',
+    cropVariety: 'Hybrid 440',
+    soilType: 'Loamy',
+    sowingDate: '2026-07-10',
+    cropStage: 'Flowering',
+    cropStageProgress: 68,
+    health: 'good', // good | attention | poor
+    healthLabel: 'Good',
   },
 ];
 
-export const soilConditions = {
-  avgTemp: 18.5,
-  nitrogenLevel: 'Optimal',
-  phLevel: 6.8,
-  tempTrend: [
-    { day: 'Mon', temp: 12 },
-    { day: 'Tue', temp: 14 },
-    { day: 'Wed', temp: 15 },
-    { day: 'Thu', temp: 16 },
-    { day: 'Fri', temp: 17 },
-    { day: 'Sat', temp: 18 },
-    { day: 'Sun', temp: 18.5 },
+/** Irrigation recommendation per field */
+export const initialIrrigationRecommendations = {
+  'field-1': {
+    waterNeededLiters: 320,
+    nextWatering: { label: 'Today', time: '6:00 PM' },
+    moisturePercent: 34,
+    moistureStatus: 'low', // low | ok | high
+    why: 'Your field needs more water today because the soil moisture is below the recommended level.',
+    upcoming: [
+      { id: 'up-1', date: 'Today', time: '6:00 PM', amountLiters: 320 },
+      { id: 'up-2', date: '28 Sep', time: '6:00 AM', amountLiters: 280 },
+    ],
+  },
+};
+
+/** Past irrigation records */
+export const initialIrrigationRecords = {
+  'field-1': [
+    {
+      id: 'irr-1',
+      date: '2026-09-21',
+      dateLabel: '21 Sep',
+      amountLiters: 280,
+      status: 'completed',
+      durationMinutes: 45,
+    },
+    {
+      id: 'irr-2',
+      date: '2026-09-18',
+      dateLabel: '18 Sep',
+      amountLiters: 300,
+      status: 'completed',
+      durationMinutes: 50,
+    },
+    {
+      id: 'irr-3',
+      date: '2026-09-15',
+      dateLabel: '15 Sep',
+      amountLiters: 260,
+      status: 'completed',
+      durationMinutes: 40,
+    },
   ],
 };
 
-// Disease Scan - Sample Results
-export const diseaseResults = [
-  {
-    id: 1,
-    plantImage:
-      'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=500&fit=crop',
-    diseaseName: 'No Disease Detected',
-    severity: 'N/A',
-    leafIntegrity: 100,
-    aiScore: 98,
-    status: 'HEALTHY',
-    label: 'HEALTHY PLANT: VIGOROUS STATUS',
+/** Yield forecast per field */
+export const initialYieldForecasts = {
+  'field-1': {
+    expectedTonnes: 2.4,
+    harvestInDaysMin: 18,
+    harvestInDaysMax: 24,
+    cropProgress: 68,
+    history: [
+      { date: '10 Sep', tonnes: 2.6 },
+      { date: '17 Sep', tonnes: 2.5 },
+      { date: '24 Sep', tonnes: 2.4 },
+    ],
+    factors: [
+      { id: 'f1', label: 'Crop health', value: 'Good' },
+      { id: 'f2', label: 'Crop stage', value: 'Flowering' },
+      { id: 'f3', label: 'Recent issues', value: 'Leaf spot (watching)' },
+      { id: 'f4', label: 'Irrigation', value: 'On track' },
+    ],
   },
-  {
-    id: 2,
-    plantImage:
-      'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=400&h=500&fit=crop',
-    diseaseName: 'Northern Leaf Blight',
-    severity: 'High',
-    leafIntegrity: 45,
-    aiScore: 91,
-    status: 'CRITICAL',
-    label: 'DISEASE DETECTED: NORTHERN LEAF BLIGHT',
-  },
-];
+};
 
-// Irrigation
-export const irrigationSectors = [
-  { id: 1, sectorName: 'Sector Alpha', crop: 'Wheat', moisturePercent: 68, status: 'OPTIMAL' },
-  { id: 2, sectorName: 'Sector Beta', crop: 'Corn', moisturePercent: 32, status: 'DRY' },
-  { id: 3, sectorName: 'Sector Gamma', crop: 'Soybeans', moisturePercent: 75, status: 'OPTIMAL' },
-  { id: 4, sectorName: 'Sector Delta', crop: 'Wheat', moisturePercent: 60, status: 'OPTIMAL' },
-];
-
-export const irrigationSchedule = [
-  {
-    time: '14:00',
-    day: 'TODAY',
-    sector: 'Sector Gamma',
-    type: 'Scheduled light soak (30 mins)',
-  },
-  {
-    time: '05:30',
-    day: 'TMRW',
-    sector: 'Sector Alpha',
-    type: 'Deep saturation cycle',
-  },
-  {
-    time: '06:00',
-    day: 'WED',
-    sector: 'Sector Delta',
-    type: 'Standard maintenance',
-  },
-];
-
-export const conservationData = {
-  gallonsSaved: '1.2M',
-  description: 'This season compared to traditional schedules.',
-  trend: [
-    { label: 'Q1', value: 45 },
-    { label: 'Q2', value: 62 },
-    { label: 'Q3', value: 78 },
-    { label: 'Q4', value: 92 },
+/** Disease scan history */
+export const initialDiseaseScans = {
+  'field-1': [
+    {
+      id: 'scan-1',
+      date: '2026-09-23',
+      dateLabel: '23 Sep',
+      issue: 'Possible Leaf Spot',
+      severity: 'Moderate',
+      explanation: 'Some leaves show signs of leaf spot.',
+      treatment: [
+        'Remove badly affected leaves',
+        'Apply the recommended treatment',
+        'Avoid excess moisture around the leaves',
+      ],
+      followUp: 'Check the crop again in 2–3 days.',
+      imagePreview: null,
+    },
   ],
 };
 
-// Yield Forecast
-export const yieldForecast = {
-  season: 'SEASON 2024 / CORN',
-  expectedHarvest: 4.2,
-  trendPercent: 12,
-  confidencePercent: 88,
-  historicalData: [
-    { year: '2021', yield: 3.5 },
-    { year: '2022', yield: 3.8 },
-    { year: '2023', yield: 3.9 },
-    { year: '2024', yield: 4.2 },
+/** Mock result returned after a new scan (frontend simulation) */
+export const mockScanResult = {
+  issue: 'Possible Leaf Spot',
+  severity: 'Moderate',
+  explanation: 'Some leaves show signs of leaf spot.',
+  treatment: [
+    'Remove badly affected leaves',
+    'Apply the recommended treatment',
+    'Avoid excess moisture around the leaves',
+  ],
+  followUp: 'Check the crop again in 2–3 days.',
+};
+
+/** Farmer-reported issues */
+export const initialReportedIssues = {
+  'field-1': [
+    {
+      id: 'issue-1',
+      date: '2026-09-23',
+      dateLabel: '23 Sep',
+      type: 'yellow_leaves',
+      label: 'Yellow leaves',
+      description: 'Lower leaves turning yellow near the north edge.',
+      photo: null,
+    },
   ],
 };
 
-export const influenceFactors = [
-  {
-    id: 1,
-    title: 'Ideal Rainfall Accumulation',
-    description: 'Current moisture levels are optimal for ear development.',
-    impact: 'High Impact',
-    icon: 'droplet',
-  },
-  {
-    id: 2,
-    title: 'Consistent Degree Days',
-    description: 'Steady temperatures accelerating maturity.',
-    impact: 'Medium Impact',
-    icon: 'thermometer',
-  },
-  {
-    id: 3,
-    title: 'Slightly Low Nitrogen in Sector B',
-    description: 'Early signs of deficiency detected in latest soil scan.',
-    impact: 'Action Needed',
-    icon: 'alert',
-  },
-];
+/**
+ * Unified field activity timeline (newest first).
+ * type: scan | disease | problem | irrigation | stage | yield | recommendation
+ */
+export const initialFieldActivity = {
+  'field-1': [
+    {
+      id: 'act-1',
+      date: '2026-09-25',
+      dateLabel: 'Today',
+      type: 'recommendation',
+      title: 'Irrigation recommendation updated',
+      detail: '320 L needed today',
+    },
+    {
+      id: 'act-2',
+      date: '2026-09-24',
+      dateLabel: 'Yesterday',
+      type: 'scan',
+      title: 'Crop scan completed',
+      detail: 'Possible leaf spot',
+    },
+    {
+      id: 'act-3',
+      date: '2026-09-23',
+      dateLabel: '23 Sep',
+      type: 'problem',
+      title: 'Problem reported',
+      detail: 'Yellow leaves',
+    },
+    {
+      id: 'act-4',
+      date: '2026-09-21',
+      dateLabel: '21 Sep',
+      type: 'irrigation',
+      title: 'Irrigation completed',
+      detail: '280 L',
+    },
+    {
+      id: 'act-5',
+      date: '2026-09-18',
+      dateLabel: '18 Sep',
+      type: 'yield',
+      title: 'Yield forecast updated',
+      detail: '2.4 tonnes',
+    },
+    {
+      id: 'act-6',
+      date: '2026-09-10',
+      dateLabel: '10 Sep',
+      type: 'stage',
+      title: 'Crop stage updated',
+      detail: 'Entered flowering',
+    },
+  ],
+};
 
-export const smartRecommendations = [
+/** Notifications tied to AgroVision workflows */
+export const initialNotifications = [
   {
-    id: 1,
-    title: 'Apply Nitrogen Booster',
-    description: 'Target Sector B within the next 48 hours to mitigate yield loss.',
+    id: 'n1',
+    type: 'irrigation',
+    title: 'Watering needed',
+    message: 'Your tomato field needs water today.',
+    time: '2 hours ago',
+    read: false,
+    fieldId: 'field-1',
   },
   {
-    id: 2,
-    title: 'Adjust Irrigation Schedule',
-    description: 'Reduce watering in Sector A by 10% due to upcoming rain forecast.',
+    id: 'n2',
+    type: 'disease',
+    title: 'Crop issue',
+    message: 'A possible leaf spot was detected.',
+    time: 'Yesterday',
+    read: false,
+    fieldId: 'field-1',
+  },
+  {
+    id: 'n3',
+    type: 'yield',
+    title: 'Forecast updated',
+    message: 'Your expected yield has changed.',
+    time: '2 days ago',
+    read: true,
+    fieldId: 'field-1',
+  },
+  {
+    id: 'n4',
+    type: 'crop',
+    title: 'Crop update',
+    message: 'Your crop is entering the flowering stage.',
+    time: '2 weeks ago',
+    read: true,
+    fieldId: 'field-1',
   },
 ];

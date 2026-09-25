@@ -1,15 +1,15 @@
 import PropTypes from 'prop-types';
 
-/**
- * Basic white card wrapper with subtle shadow and rounded corners.
- */
-export default function Card({ children, className = '', onClick, role, ariaLabel }) {
+export default function Card({ children, className = '', padding = true, onClick }) {
   return (
     <div
-      role={role}
-      aria-label={ariaLabel}
       onClick={onClick}
-      className={`bg-white rounded-2xl shadow-sm border border-black/[0.03] ${className}`}
+      className={`
+        bg-white rounded-2xl border border-black/[0.04] shadow-[var(--shadow-card)]
+        ${padding ? 'p-5 sm:p-6' : ''}
+        ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+        ${className}
+      `}
     >
       {children}
     </div>
@@ -19,7 +19,6 @@ export default function Card({ children, className = '', onClick, role, ariaLabe
 Card.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
+  padding: PropTypes.bool,
   onClick: PropTypes.func,
-  role: PropTypes.string,
-  ariaLabel: PropTypes.string,
 };
