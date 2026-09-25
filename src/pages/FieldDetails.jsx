@@ -8,11 +8,11 @@ import {
   MapPin,
   Calendar,
 } from 'lucide-react';
-import Card from '../components/common/Card';
-import StatusBadge from '../components/common/StatusBadge';
-import ProgressBar from '../components/common/ProgressBar';
-import FieldSelector from '../components/layout/FieldSelector';
-import EmptyState from '../components/common/EmptyState';
+import Card from '../components/Common/Card';
+import StatusBadge from '../components/Common/StatusBadge';
+import ProgressBar from '../components/Common/ProgressBar';
+import FieldSelector from '../components/Layout/FieldSelector';
+import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
 
 export default function FieldDetails() {

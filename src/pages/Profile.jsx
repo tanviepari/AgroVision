@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, ChevronRight } from 'lucide-react';
-import Button from '../components/common/Button';
-import Card from '../components/common/Card';
+import Button from '../components/Common/Button';
+import Card from '../components/Common/Card';
 import { useApp } from '../context/AppContext';
 import { LANGUAGE_OPTIONS } from '../data/mockData';
 

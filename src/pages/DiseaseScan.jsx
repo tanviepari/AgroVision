@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImagePlus, Loader2, X } from 'lucide-react';
-import Button from '../components/common/Button';
-import Card from '../components/common/Card';
-import FieldSelector from '../components/layout/FieldSelector';
-import EmptyState from '../components/common/EmptyState';
+import Button from '../components/Common/Button';
+import Card from '../components/Common/Card';
+import FieldSelector from '../components/Layout/FieldSelector';
+import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from '../context/AppContext';
-import AppShell from './layout/AppShell';
+import AppShell from './Layout/AppShell';
 import Login from '../pages/Login';
 import FieldSetup from '../pages/FieldSetup';
 import FieldOverview from '../pages/FieldOverview';

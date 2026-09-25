@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Leaf, Check } from 'lucide-react';
-import Button from '../components/common/Button';
+import Button from '../components/Common/Button';
 import { useApp } from '../context/AppContext';
 import { CROP_OPTIONS, SOIL_OPTIONS, CROP_STAGES } from '../data/mockData';
 

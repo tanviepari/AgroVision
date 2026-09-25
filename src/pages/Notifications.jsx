@@ -1,7 +1,7 @@
 import { Droplets, Leaf, Wheat, Sun } from 'lucide-react';
-import Button from '../components/common/Button';
-import Card from '../components/common/Card';
-import EmptyState from '../components/common/EmptyState';
+import Button from '../components/Common/Button';
+import Card from '../components/Common/Card';
+import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
 
 const typeMeta = {

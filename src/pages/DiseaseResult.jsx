@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { RotateCcw, Save, Leaf } from 'lucide-react';
-import Button from '../components/common/Button';
-import Card from '../components/common/Card';
-import StatusBadge from '../components/common/StatusBadge';
-import EmptyState from '../components/common/EmptyState';
+import Button from '../components/Common/Button';
+import Card from '../components/Common/Card';
+import StatusBadge from '../components/Common/StatusBadge';
+import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
 
 export default function DiseaseResult() {

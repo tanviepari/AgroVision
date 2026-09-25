@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Droplets, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
-import Button from '../components/common/Button';
-import Card from '../components/common/Card';
-import ProgressBar from '../components/common/ProgressBar';
-import StatusBadge from '../components/common/StatusBadge';
-import FieldSelector from '../components/layout/FieldSelector';
-import EmptyState from '../components/common/EmptyState';
+import Button from '../components/Common/Button';
+import Card from '../components/Common/Card';
+import ProgressBar from '../components/Common/ProgressBar';
+import StatusBadge from '../components/Common/StatusBadge';
+import FieldSelector from '../components/Layout/FieldSelector';
+import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
 
 export default function Irrigation() {

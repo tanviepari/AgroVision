@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Leaf, Eye, EyeOff } from 'lucide-react';
-import Button from '../components/common/Button';
+import Button from '../components/Common/Button';
 import { useApp } from '../context/AppContext';
 
 export default function Login() {
