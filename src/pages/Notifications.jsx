@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Droplets, Leaf, Wheat, Sun } from 'lucide-react';
 import Button from '../components/Common/Button';
 import Card from '../components/Common/Card';
@@ -17,7 +18,9 @@ export default function Notifications() {
     markNotificationRead,
     markAllNotificationsRead,
     unreadCount,
+    setSelectedFieldId,
   } = useApp();
+  const navigate = useNavigate();
 
   if (notifications.length === 0) {
     return (
@@ -57,7 +60,11 @@ export default function Notifications() {
                 className={`!p-4 flex gap-4 transition-opacity ${
                   n.read ? 'opacity-70' : ''
                 }`}
-                onClick={() => markNotificationRead(n.id)}
+                onClick={async () => {
+                  await markNotificationRead(n.id);
+                  if (n.fieldId) setSelectedFieldId(n.fieldId);
+                  if (n.link) navigate(n.link);
+                }}
               >
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${meta.color}`}

@@ -1,271 +1,314 @@
-import { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import {
-  initialFarmer,
-  initialFields,
-  initialIrrigationRecommendations,
-  initialIrrigationRecords,
-  initialYieldForecasts,
-  initialDiseaseScans,
-  initialReportedIssues,
-  initialFieldActivity,
-  initialNotifications,
-  mockScanResult,
-} from '../data/mockData';
+import { api, apiErrorMessage, getToken, setToken } from '../services/api';
 
 const AppContext = createContext(null);
-const AUTH_KEY = 'agrovision_auth';
 
-function loadAuth() {
-  try {
-    const raw = sessionStorage.getItem(AUTH_KEY);
-    if (!raw) return { isAuthenticated: false, setupComplete: true };
-    return JSON.parse(raw);
-  } catch {
-    return { isAuthenticated: false, setupComplete: true };
-  }
-}
-
-function saveAuth(isAuthenticated, setupComplete) {
-  sessionStorage.setItem(
-    AUTH_KEY,
-    JSON.stringify({ isAuthenticated, setupComplete })
-  );
-}
-
-function formatTodayLabel() {
-  return 'Today';
-}
-
-function newId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
+const emptyFieldData = {
+  irrigationRecommendations: {},
+  irrigationRecords: {},
+  yieldForecasts: {},
+  diseaseScans: {},
+  reportedIssues: {},
+  fieldActivity: {},
+};
 
 export function AppProvider({ children }) {
-  const saved = loadAuth();
-  const [isAuthenticated, setIsAuthenticated] = useState(saved.isAuthenticated);
-  const [setupComplete, setSetupComplete] = useState(saved.setupComplete);
-  const [farmer, setFarmer] = useState(initialFarmer);
-  const [fields, setFields] = useState(initialFields);
-  const [selectedFieldId, setSelectedFieldId] = useState(initialFields[0]?.id ?? null);
-  const [irrigationRecommendations, setIrrigationRecommendations] = useState(
-    initialIrrigationRecommendations
-  );
-  const [irrigationRecords, setIrrigationRecords] = useState(initialIrrigationRecords);
-  const [yieldForecasts] = useState(initialYieldForecasts);
-  const [diseaseScans, setDiseaseScans] = useState(initialDiseaseScans);
-  const [reportedIssues, setReportedIssues] = useState(initialReportedIssues);
-  const [fieldActivity, setFieldActivity] = useState(initialFieldActivity);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [authReady, setAuthReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [farmer, setFarmer] = useState(null);
+  const [farm, setFarm] = useState(null);
+  const [fields, setFields] = useState([]);
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [weather, setWeather] = useState({ available: false, message: 'Weather information is not available right now.' });
+  const [bundle, setBundle] = useState(emptyFieldData);
   const [pendingScanResult, setPendingScanResult] = useState(null);
   const [toast, setToast] = useState(null);
-
-  const selectedField = useMemo(
-    () => fields.find((f) => f.id === selectedFieldId) ?? null,
-    [fields, selectedFieldId]
-  );
+  const [loadingField, setLoadingField] = useState(false);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 2800);
   }, []);
 
-  const login = useCallback(() => {
-    setIsAuthenticated(true);
-    const complete = fields.length > 0;
-    setSetupComplete(complete);
-    saveAuth(true, complete);
-  }, [fields.length]);
-
-  const logout = useCallback(() => {
-    setIsAuthenticated(false);
-    saveAuth(false, setupComplete);
-  }, [setupComplete]);
-
-  const registerStart = useCallback(() => {
-    setIsAuthenticated(true);
-    setSetupComplete(false);
-    setFields([]);
-    setSelectedFieldId(null);
-    saveAuth(true, false);
-  }, []);
-
-  const completeFieldSetup = useCallback(
-    (payload) => {
-      const fieldId = newId('field');
-      const field = {
-        id: fieldId,
-        name: payload.fieldName,
-        location: payload.location,
-        areaAcres: Number(payload.areaAcres),
-        crop: payload.crop,
-        cropVariety: payload.cropVariety || '',
-        soilType: payload.soilType,
-        sowingDate: payload.sowingDate,
-        cropStage: payload.cropStage,
-        cropStageProgress: 40,
-        health: 'good',
-        healthLabel: 'Good',
-      };
-
-      setFarmer((prev) => ({
-        ...prev,
-        name: payload.farmerName || prev.name,
-        location: payload.location || prev.location,
-        farmName: payload.farmName || prev.farmName,
-      }));
-
-      setFields((prev) => [...prev, field]);
-      setSelectedFieldId(fieldId);
-      setIrrigationRecommendations((prev) => ({
-        ...prev,
-        [fieldId]: {
-          waterNeededLiters: 250,
-          nextWatering: { label: 'Tomorrow', time: '6:00 AM' },
-          moisturePercent: 48,
-          moistureStatus: 'ok',
-          why: 'Watering looks on track for this crop stage. Check again tomorrow morning.',
-          upcoming: [
-            { id: newId('up'), date: 'Tomorrow', time: '6:00 AM', amountLiters: 250 },
-          ],
-        },
-      }));
-      setIrrigationRecords((prev) => ({ ...prev, [fieldId]: [] }));
-      setDiseaseScans((prev) => ({ ...prev, [fieldId]: [] }));
-      setReportedIssues((prev) => ({ ...prev, [fieldId]: [] }));
-      setFieldActivity((prev) => ({
-        ...prev,
-        [fieldId]: [
-          {
-            id: newId('act'),
-            date: new Date().toISOString().slice(0, 10),
-            dateLabel: formatTodayLabel(),
-            type: 'stage',
-            title: 'Field added',
-            detail: `${field.crop} · ${field.areaAcres} acres`,
-          },
-        ],
-      }));
-      setSetupComplete(true);
-      saveAuth(true, true);
-      showToast('Field added successfully');
-    },
-    [showToast]
+  const selectedField = useMemo(
+    () => fields.find((f) => f.id === selectedFieldId) ?? null,
+    [fields, selectedFieldId]
   );
 
-  const addActivity = useCallback((fieldId, activity) => {
-    setFieldActivity((prev) => ({
+  const setupComplete = fields.length > 0;
+
+  const loadNotifications = useCallback(async () => {
+    const { data } = await api.get('/notifications');
+    setNotifications(data.notifications);
+  }, []);
+
+  const loadFields = useCallback(async () => {
+    const [{ data: fieldData }, { data: farmData }] = await Promise.all([
+      api.get('/fields'),
+      api.get('/farms'),
+    ]);
+    setFields(fieldData.fields);
+    setFarm(farmData.farms[0] || null);
+    setSelectedFieldId((current) => {
+      if (current && fieldData.fields.some((field) => field.id === current)) return current;
+      return fieldData.fields[0]?.id ?? null;
+    });
+    return fieldData.fields;
+  }, []);
+
+  const loadFieldBundle = useCallback(async (fieldId) => {
+    if (!fieldId) {
+      setBundle(emptyFieldData);
+      return;
+    }
+    setLoadingField(true);
+    try {
+      const [irrigation, records, forecast, scans, problems, activities, fieldRes] = await Promise.all([
+        api.get('/irrigation/recommendation', { params: { fieldId } }),
+        api.get('/irrigation/records', { params: { fieldId } }),
+        api.get('/yield', { params: { fieldId } }),
+        api.get('/scans', { params: { fieldId } }),
+        api.get('/problems', { params: { fieldId } }),
+        api.get('/activities', { params: { fieldId } }),
+        api.get(`/fields/${fieldId}`),
+      ]);
+      const weatherResponse = await api.get('/weather', {
+        params: { location: fieldRes.data.field.location || '' },
+      });
+      setWeather(weatherResponse.data);
+      setBundle({
+        irrigationRecommendations: { [fieldId]: irrigation.data.recommendation },
+        irrigationRecords: { [fieldId]: records.data.records },
+        yieldForecasts: { [fieldId]: forecast.data.forecast },
+        diseaseScans: { [fieldId]: scans.data.scans },
+        reportedIssues: { [fieldId]: problems.data.reports },
+        fieldActivity: { [fieldId]: activities.data.activities },
+      });
+    } finally {
+      setLoadingField(false);
+    }
+  }, []);
+
+  const refreshAll = useCallback(async (fieldId) => {
+    const nextFields = await loadFields();
+    await loadNotifications();
+    const id = fieldId || selectedFieldId || nextFields[0]?.id;
+    if (id) await loadFieldBundle(id);
+  }, [loadFields, loadFieldBundle, loadNotifications, selectedFieldId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function boot() {
+      if (!getToken()) {
+        setAuthReady(true);
+        return;
+      }
+      try {
+        const { data } = await api.get('/auth/me');
+        if (cancelled) return;
+        setFarmer(data.user);
+        setIsAuthenticated(true);
+        const nextFields = await loadFields();
+        await loadNotifications();
+        if (nextFields[0]) await loadFieldBundle(nextFields[0].id);
+      } catch {
+        setToken(null);
+        setIsAuthenticated(false);
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    }
+    boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadFields, loadFieldBundle, loadNotifications]);
+
+  useEffect(() => {
+    if (!authReady || !isAuthenticated || !selectedFieldId) return;
+    loadFieldBundle(selectedFieldId).catch(() => {});
+  }, [selectedFieldId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const login = useCallback(async (contact, password) => {
+    const { data } = await api.post('/auth/login', { contact, password });
+    setToken(data.token);
+    setFarmer(data.user);
+    setIsAuthenticated(true);
+    const nextFields = await loadFields();
+    await loadNotifications();
+    if (nextFields[0]) await loadFieldBundle(nextFields[0].id);
+    return nextFields.length > 0;
+  }, [loadFieldBundle, loadFields, loadNotifications]);
+
+  const register = useCallback(async (payload) => {
+    const { data } = await api.post('/auth/register', payload);
+    setToken(data.token);
+    setFarmer(data.user);
+    setFields([]);
+    setFarm(null);
+    setSelectedFieldId(null);
+    setIsAuthenticated(true);
+    setBundle(emptyFieldData);
+    setNotifications([]);
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* The session is cleared locally even if the server is unreachable. */
+    }
+    setToken(null);
+    setIsAuthenticated(false);
+    setFarmer(null);
+    setFarm(null);
+    setFields([]);
+    setSelectedFieldId(null);
+    setNotifications([]);
+    setBundle(emptyFieldData);
+    setPendingScanResult(null);
+  }, []);
+
+  const completeFieldSetup = useCallback(async (payload) => {
+    const { data } = await api.post('/fields', {
+      farmerName: payload.farmerName,
+      farmName: payload.farmName,
+      farmId: farm?.id,
+      name: payload.fieldName,
+      location: payload.location,
+      areaAcres: Number(payload.areaAcres),
+      crop: payload.crop,
+      cropVariety: payload.cropVariety,
+      soilType: payload.soilType,
+      sowingDate: payload.sowingDate,
+      cropStage: payload.cropStage,
+      notes: payload.notes || '',
+    });
+    const { data: me } = await api.get('/auth/me');
+    setFarmer(me.user);
+    await loadFields();
+    setSelectedFieldId(data.field.id);
+    await loadFieldBundle(data.field.id);
+    showToast('Field added successfully');
+  }, [farm, loadFieldBundle, loadFields, showToast]);
+
+  const updateField = useCallback(async (fieldId, payload) => {
+    await api.patch(`/fields/${fieldId}`, payload);
+    await loadFields();
+    await loadFieldBundle(fieldId);
+    showToast('Field updated');
+  }, [loadFieldBundle, loadFields, showToast]);
+
+  const deleteField = useCallback(async (fieldId) => {
+    await api.delete(`/fields/${fieldId}`);
+    const next = await loadFields();
+    if (next[0]) await loadFieldBundle(next[0].id);
+    else setBundle(emptyFieldData);
+    showToast('Field removed');
+  }, [loadFieldBundle, loadFields, showToast]);
+
+  const updateFarmer = useCallback(async (patch) => {
+    const { data } = await api.patch('/auth/profile', {
+      name: patch.name,
+      mobile: patch.contact || patch.mobile,
+      email: patch.email,
+      location: patch.location,
+      state: patch.state,
+      district: patch.district,
+      preferredLanguage: patch.preferredLanguage,
+      notificationPrefs: patch.notificationPrefs,
+    });
+    setFarmer(data.user);
+    if (farm && patch.farmName && patch.farmName !== farm.name) {
+      const updated = await api.patch(`/farms/${farm.id}`, {
+        name: patch.farmName,
+        location: patch.location,
+        state: patch.state,
+        district: patch.district,
+      });
+      setFarm(updated.data.farm);
+    }
+    showToast('Profile updated');
+  }, [farm, showToast]);
+
+  const runScan = useCallback(async (fieldId, file) => {
+    const form = new FormData();
+    form.append('fieldId', fieldId);
+    form.append('image', file);
+    const { data } = await api.post('/scans/analyse', form);
+    setPendingScanResult(data.scan);
+    return data.scan;
+  }, []);
+
+  const saveScanResult = useCallback(async (scanId) => {
+    const { data } = await api.post(`/scans/${scanId}/save`);
+    setPendingScanResult(null);
+    await loadFieldBundle(data.scan.fieldId);
+    await loadFields();
+    await loadNotifications();
+    showToast('Scan result saved');
+    return data.scan;
+  }, [loadFieldBundle, loadFields, loadNotifications, showToast]);
+
+  const reportProblem = useCallback(async (fieldId, problem) => {
+    const form = new FormData();
+    form.append('fieldId', fieldId);
+    form.append('category', problem.type);
+    form.append('description', problem.description || '');
+    if (problem.file) form.append('image', problem.file);
+    await api.post('/problems', form);
+    await loadFieldBundle(fieldId);
+    await loadFields();
+    await loadNotifications();
+    showToast('Problem saved');
+  }, [loadFieldBundle, loadFields, loadNotifications, showToast]);
+
+  const addIrrigationRecord = useCallback(async (fieldId, payload) => {
+    await api.post('/irrigation/records', { fieldId, ...payload });
+    await loadFieldBundle(fieldId);
+    showToast('Irrigation saved');
+  }, [loadFieldBundle, showToast]);
+
+  const markIrrigationComplete = useCallback(async (fieldId, scheduleId, amountLiters) => {
+    if (scheduleId) {
+      await api.post(`/irrigation/schedules/${scheduleId}/complete`, { amountLiters });
+    } else {
+      await api.post('/irrigation/records', {
+        fieldId,
+        amountLiters,
+        recordedAt: new Date().toISOString(),
+      });
+    }
+    await loadFieldBundle(fieldId);
+    await loadNotifications();
+    showToast('Irrigation marked complete');
+  }, [loadFieldBundle, loadNotifications, showToast]);
+
+  const addIrrigationSchedule = useCallback(async (fieldId, payload) => {
+    await api.post('/irrigation/schedules', { fieldId, ...payload });
+    await loadFieldBundle(fieldId);
+    showToast('Watering plan saved');
+  }, [loadFieldBundle, showToast]);
+
+  const loadActivities = useCallback(async (fieldId, filters = {}) => {
+    const { data } = await api.get('/activities', { params: { fieldId, ...filters } });
+    setBundle((prev) => ({
       ...prev,
-      [fieldId]: [
-        {
-          id: newId('act'),
-          date: new Date().toISOString().slice(0, 10),
-          dateLabel: formatTodayLabel(),
-          ...activity,
-        },
-        ...(prev[fieldId] || []),
-      ],
+      fieldActivity: { ...prev.fieldActivity, [fieldId]: data.activities },
     }));
   }, []);
 
-  const saveScanResult = useCallback(
-    (fieldId, imagePreview) => {
-      const result = {
-        id: newId('scan'),
-        date: new Date().toISOString().slice(0, 10),
-        dateLabel: formatTodayLabel(),
-        ...mockScanResult,
-        imagePreview,
-      };
-      setDiseaseScans((prev) => ({
-        ...prev,
-        [fieldId]: [result, ...(prev[fieldId] || [])],
-      }));
-      addActivity(fieldId, {
-        type: 'disease',
-        title: 'Disease scan',
-        detail: result.issue,
-      });
-      setPendingScanResult(null);
-      showToast('Scan result saved');
-      return result;
-    },
-    [addActivity, showToast]
-  );
-
-  const runMockScan = useCallback((imagePreview) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const result = { ...mockScanResult, imagePreview };
-        setPendingScanResult(result);
-        resolve(result);
-      }, 1800);
-    });
+  const markNotificationRead = useCallback(async (id) => {
+    await api.patch(`/notifications/${id}/read`);
+    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, read: true } : item)));
   }, []);
 
-  const reportProblem = useCallback(
-    (fieldId, problem) => {
-      const entry = {
-        id: newId('issue'),
-        date: new Date().toISOString().slice(0, 10),
-        dateLabel: formatTodayLabel(),
-        ...problem,
-      };
-      setReportedIssues((prev) => ({
-        ...prev,
-        [fieldId]: [entry, ...(prev[fieldId] || [])],
-      }));
-      addActivity(fieldId, {
-        type: 'problem',
-        title: 'Problem reported',
-        detail: problem.label,
-      });
-      showToast('Problem saved');
-    },
-    [addActivity, showToast]
-  );
-
-  const markIrrigationComplete = useCallback(
-    (fieldId) => {
-      const rec = irrigationRecommendations[fieldId];
-      if (!rec) return;
-      const amount = rec.waterNeededLiters;
-      const entry = {
-        id: newId('irr'),
-        date: new Date().toISOString().slice(0, 10),
-        dateLabel: formatTodayLabel(),
-        amountLiters: amount,
-        status: 'completed',
-        durationMinutes: 45,
-      };
-      setIrrigationRecords((prev) => ({
-        ...prev,
-        [fieldId]: [entry, ...(prev[fieldId] || [])],
-      }));
-      addActivity(fieldId, {
-        type: 'irrigation',
-        title: 'Irrigation completed',
-        detail: `${amount} L`,
-      });
-      showToast('Irrigation marked complete');
-    },
-    [addActivity, irrigationRecommendations, showToast]
-  );
-
-  const markNotificationRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const markAllNotificationsRead = useCallback(async () => {
+    await api.patch('/notifications/read-all');
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
   }, []);
-
-  const markAllNotificationsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
-
-  const updateFarmer = useCallback((patch) => {
-    setFarmer((prev) => ({ ...prev, ...patch }));
-    showToast('Profile updated');
-  }, [showToast]);
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -273,36 +316,57 @@ export function AppProvider({ children }) {
   );
 
   const value = {
+    authReady,
     isAuthenticated,
     setupComplete,
-    farmer,
+    farmer: {
+      name: '',
+      contact: '',
+      email: '',
+      location: '',
+      state: '',
+      district: '',
+      preferredLanguage: 'English',
+      notificationPrefs: { irrigation: true, disease: true, yield: true },
+      ...(farmer || {}),
+      farmName: farm?.name || '',
+    },
+    farm,
     fields,
     selectedFieldId,
     selectedField,
     setSelectedFieldId,
-    irrigationRecommendations,
-    irrigationRecords,
-    yieldForecasts,
-    diseaseScans,
-    reportedIssues,
-    fieldActivity,
+    irrigationRecommendations: bundle.irrigationRecommendations,
+    irrigationRecords: bundle.irrigationRecords,
+    yieldForecasts: bundle.yieldForecasts,
+    diseaseScans: bundle.diseaseScans,
+    reportedIssues: bundle.reportedIssues,
+    fieldActivity: bundle.fieldActivity,
     notifications,
     unreadCount,
+    weather,
     pendingScanResult,
     setPendingScanResult,
     toast,
     showToast,
+    loadingField,
     login,
+    register,
     logout,
-    registerStart,
     completeFieldSetup,
-    runMockScan,
+    updateField,
+    deleteField,
+    runScan,
     saveScanResult,
     reportProblem,
+    addIrrigationRecord,
+    addIrrigationSchedule,
     markIrrigationComplete,
+    loadActivities,
     markNotificationRead,
     markAllNotificationsRead,
     updateFarmer,
+    apiErrorMessage,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

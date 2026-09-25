@@ -1,8 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Droplets, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
 import Button from '../components/Common/Button';
 import Card from '../components/Common/Card';
-import ProgressBar from '../components/Common/ProgressBar';
 import StatusBadge from '../components/Common/StatusBadge';
 import FieldSelector from '../components/Layout/FieldSelector';
 import EmptyState from '../components/Common/EmptyState';
@@ -15,7 +15,16 @@ export default function Irrigation() {
     irrigationRecommendations,
     irrigationRecords,
     markIrrigationComplete,
+    addIrrigationRecord,
+    addIrrigationSchedule,
+    showToast,
+    apiErrorMessage,
   } = useApp();
+  const [amount, setAmount] = useState('');
+  const [when, setWhen] = useState('');
+  const [planAmount, setPlanAmount] = useState('');
+  const [planWhen, setPlanWhen] = useState('');
+  const [saving, setSaving] = useState(false);
 
   if (!selectedField) {
     return (
@@ -80,22 +89,10 @@ export default function Irrigation() {
             <span className="text-xs font-medium uppercase tracking-wide text-text-light">
               Field moisture
             </span>
-            <StatusBadge
-              status={rec.moistureStatus}
-              label={
-                rec.moistureStatus === 'low'
-                  ? 'Low'
-                  : rec.moistureStatus === 'high'
-                    ? 'High'
-                    : 'Okay'
-              }
-            />
           </div>
-          <ProgressBar
-            value={rec.moisturePercent}
-            color={rec.moistureStatus === 'low' ? 'alert' : 'water'}
-          />
-          <p className="mt-2 text-sm font-semibold text-text-dark">{rec.moisturePercent}%</p>
+          <p className="text-sm text-text-dark leading-relaxed">
+            {rec.moistureMessage || 'No soil sensor is connected. This water amount is an estimate.'}
+          </p>
         </Card>
       </div>
 
@@ -151,15 +148,98 @@ export default function Irrigation() {
         </section>
       )}
 
-      <Button
-        size="lg"
-        fullWidth
-        variant="water"
-        onClick={() => markIrrigationComplete(selectedFieldId)}
-      >
-        <CheckCircle2 size={18} />
-        Mark as completed
-      </Button>
+      {rec.upcoming?.[0] && (
+        <Button
+          size="lg"
+          fullWidth
+          variant="water"
+          disabled={saving}
+          onClick={async () => {
+            setSaving(true);
+            try {
+              await markIrrigationComplete(selectedFieldId, rec.upcoming[0].id, rec.upcoming[0].amountLiters);
+            } catch (err) {
+              showToast(apiErrorMessage(err), 'error');
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          <CheckCircle2 size={18} />
+          Mark next watering as completed
+        </Button>
+      )}
+
+      <Card>
+        <h2 className="font-serif text-lg font-bold text-primary mb-3">Record water used</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block text-sm">
+            Litres
+            <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2" />
+          </label>
+          <label className="block text-sm">
+            Date and time
+            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2" />
+          </label>
+        </div>
+        <Button
+          className="mt-4"
+          disabled={saving || !amount || !when}
+          onClick={async () => {
+            setSaving(true);
+            try {
+              await addIrrigationRecord(selectedFieldId, {
+                amountLiters: Number(amount),
+                recordedAt: new Date(when).toISOString(),
+              });
+              setAmount('');
+              setWhen('');
+            } catch (err) {
+              showToast(apiErrorMessage(err), 'error');
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          Save irrigation
+        </Button>
+      </Card>
+
+      <Card>
+        <h2 className="font-serif text-lg font-bold text-primary mb-3">Plan a watering</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block text-sm">
+            Litres
+            <input type="number" min="1" value={planAmount} onChange={(e) => setPlanAmount(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2" />
+          </label>
+          <label className="block text-sm">
+            Date and time
+            <input type="datetime-local" value={planWhen} onChange={(e) => setPlanWhen(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2" />
+          </label>
+        </div>
+        <Button
+          className="mt-4"
+          variant="secondary"
+          disabled={saving || !planAmount || !planWhen}
+          onClick={async () => {
+            setSaving(true);
+            try {
+              await addIrrigationSchedule(selectedFieldId, {
+                amountLiters: Number(planAmount),
+                scheduledAt: new Date(planWhen).toISOString(),
+              });
+              setPlanAmount('');
+              setPlanWhen('');
+            } catch (err) {
+              showToast(apiErrorMessage(err), 'error');
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          Save plan
+        </Button>
+      </Card>
     </div>
   );
 }

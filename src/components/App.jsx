@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from '../context/AppContext';
 import AppShell from './Layout/AppShell';
 import Login from '../pages/Login';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 import FieldSetup from '../pages/FieldSetup';
 import FieldOverview from '../pages/FieldOverview';
 import FieldDetails from '../pages/FieldDetails';
@@ -17,7 +19,8 @@ import Profile from '../pages/Profile';
 import PropTypes from 'prop-types';
 
 function ProtectedRoute({ children, requireSetup = true }) {
-  const { isAuthenticated, setupComplete } = useApp();
+  const { authReady, isAuthenticated, setupComplete } = useApp();
+  if (!authReady) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (requireSetup && !setupComplete) return <Navigate to="/setup" replace />;
   return children;
@@ -29,7 +32,8 @@ ProtectedRoute.propTypes = {
 };
 
 function PublicOnly({ children }) {
-  const { isAuthenticated, setupComplete } = useApp();
+  const { authReady, isAuthenticated, setupComplete } = useApp();
+  if (!authReady) return null;
   if (isAuthenticated && setupComplete) return <Navigate to="/app" replace />;
   if (isAuthenticated && !setupComplete) return <Navigate to="/setup" replace />;
   return children;
@@ -57,6 +61,15 @@ export default function App() {
               </PublicOnly>
             }
           />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicOnly>
+                <ForgotPassword />
+              </PublicOnly>
+            }
+          />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route
             path="/setup"

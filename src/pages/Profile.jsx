@@ -4,7 +4,8 @@ import { LogOut, ChevronRight } from 'lucide-react';
 import Button from '../components/Common/Button';
 import Card from '../components/Common/Card';
 import { useApp } from '../context/AppContext';
-import { LANGUAGE_OPTIONS } from '../data/mockData';
+import { INDIAN_STATES, LANGUAGE_OPTIONS } from '../data/mockData';
+import { apiErrorMessage } from '../services/api';
 
 const inputClass =
   'w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
@@ -15,16 +16,36 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: farmer.name,
     contact: farmer.contact,
+    email: farmer.email || '',
     location: farmer.location,
+    state: farmer.state || '',
+    district: farmer.district || '',
     preferredLanguage: farmer.preferredLanguage,
     farmName: farmer.farmName,
   });
-  const [notifyIrrigation, setNotifyIrrigation] = useState(true);
-  const [notifyDisease, setNotifyDisease] = useState(true);
-  const [notifyYield, setNotifyYield] = useState(true);
+  const [notifyIrrigation, setNotifyIrrigation] = useState(farmer.notificationPrefs?.irrigation !== false);
+  const [notifyDisease, setNotifyDisease] = useState(farmer.notificationPrefs?.disease !== false);
+  const [notifyYield, setNotifyYield] = useState(farmer.notificationPrefs?.yield !== false);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    updateFarmer(form);
+  const handleSave = async () => {
+    setError('');
+    setSaving(true);
+    try {
+      await updateFarmer({
+        ...form,
+        notificationPrefs: {
+          irrigation: notifyIrrigation,
+          disease: notifyDisease,
+          yield: notifyYield,
+        },
+      });
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -61,11 +82,41 @@ export default function Profile() {
             />
           </label>
           <label className="block">
+            <span className="text-xs font-medium text-text-light">Email</span>
+            <input
+              type="email"
+              className={`${inputClass} mt-1`}
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+          </label>
+          <label className="block">
             <span className="text-xs font-medium text-text-light">Location</span>
             <input
               className={`${inputClass} mt-1`}
               value={form.location}
               onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-text-light">State</span>
+            <select
+              className={`${inputClass} mt-1`}
+              value={form.state}
+              onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+            >
+              <option value="">Choose state</option>
+              {INDIAN_STATES.map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-text-light">District</span>
+            <input
+              className={`${inputClass} mt-1`}
+              value={form.district}
+              onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
             />
           </label>
           <label className="block">
@@ -85,8 +136,9 @@ export default function Profile() {
             </select>
           </label>
         </div>
-        <Button className="mt-4" onClick={handleSave}>
-          Save farmer details
+        {error && <p className="mt-3 text-sm text-alert" role="alert">{error}</p>}
+        <Button className="mt-4" onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save farmer details'}
         </Button>
       </Card>
 
@@ -171,6 +223,9 @@ export default function Profile() {
             </li>
           ))}
         </ul>
+        <Button className="mt-4" variant="secondary" onClick={handleSave} disabled={saving}>
+          Save preferences
+        </Button>
       </Card>
 
       <Card>

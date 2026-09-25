@@ -11,10 +11,11 @@ const ACCEPTED = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 const MAX_MB = 10;
 
 export default function DiseaseScan() {
-  const { selectedField, runMockScan, showToast } = useApp();
+  const { selectedField, selectedFieldId, runScan, showToast, apiErrorMessage } = useApp();
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [preview, setPreview] = useState(null);
+  const [file, setStoredFile] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +34,7 @@ export default function DiseaseScan() {
         return;
       }
       setError('');
+      setStoredFile(file);
       const reader = new FileReader();
       reader.onload = (e) => setPreview(e.target.result);
       reader.readAsDataURL(file);
@@ -41,13 +43,15 @@ export default function DiseaseScan() {
   );
 
   const handleScan = async () => {
-    if (!preview) return;
+    if (!file) return;
     setChecking(true);
     try {
-      await runMockScan(preview);
+      await runScan(selectedFieldId, file);
       navigate('/app/disease-result');
-    } catch {
-      showToast('Scan failed. Please try again.', 'error');
+    } catch (err) {
+      const message = apiErrorMessage(err);
+      setError(message);
+      showToast(message, 'error');
     } finally {
       setChecking(false);
     }
@@ -137,6 +141,7 @@ export default function DiseaseScan() {
               className="inline-flex items-center gap-1 text-xs text-text-light hover:text-alert"
               onClick={() => {
                 setPreview(null);
+                setStoredFile(null);
                 if (inputRef.current) inputRef.current.value = '';
               }}
             >

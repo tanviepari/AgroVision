@@ -51,7 +51,7 @@ export default function YieldForecast() {
           <span className="text-2xl font-sans font-semibold">tonnes</span>
         </p>
         <p className="mt-3 text-sm text-text-light">
-          This is an estimate — it updates as new field information is recorded.
+          {data.methodNote || 'This is an estimate — it updates as new field information is recorded.'}
         </p>
       </Card>
 

@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ScanLine,
   Droplets,
@@ -8,12 +9,18 @@ import {
   MapPin,
   Calendar,
 } from 'lucide-react';
+import Button from '../components/Common/Button';
 import Card from '../components/Common/Card';
 import StatusBadge from '../components/Common/StatusBadge';
 import ProgressBar from '../components/Common/ProgressBar';
 import FieldSelector from '../components/Layout/FieldSelector';
 import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
+import { CROP_OPTIONS, CROP_STAGES, SOIL_OPTIONS } from '../data/mockData';
+import { apiErrorMessage } from '../services/api';
+
+const inputClass =
+  'w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 export default function FieldDetails() {
   const {
@@ -21,7 +28,15 @@ export default function FieldDetails() {
     selectedFieldId,
     irrigationRecommendations,
     yieldForecasts,
+    updateField,
+    deleteField,
   } = useApp();
+  const navigate = useNavigate();
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(null);
 
   if (!selectedField) {
     return (
@@ -124,6 +139,114 @@ export default function FieldDetails() {
           </div>
         </Card>
       </div>
+
+      <Card>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="font-serif text-xl font-bold text-primary">Edit this field</h2>
+          {!editing && (
+            <Button variant="secondary" onClick={() => {
+              setForm({
+                name: selectedField.name,
+                crop: selectedField.crop,
+                cropVariety: selectedField.cropVariety,
+                areaAcres: selectedField.areaAcres,
+                soilType: selectedField.soilType,
+                sowingDate: selectedField.sowingDate,
+                location: selectedField.location,
+                cropStage: selectedField.cropStage,
+                notes: selectedField.notes || '',
+              });
+              setEditing(true);
+            }}>
+              Edit
+            </Button>
+          )}
+        </div>
+        {editing && form && (
+          <div className="space-y-3">
+            {[
+              ['name', 'Field name'],
+              ['cropVariety', 'Variety'],
+              ['areaAcres', 'Area (acres)'],
+              ['location', 'Location'],
+              ['notes', 'Additional information'],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className="text-xs font-medium text-text-light">{label}</span>
+                <input
+                  className={`${inputClass} mt-1`}
+                  value={form[key]}
+                  onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
+                />
+              </label>
+            ))}
+            <label className="block">
+              <span className="text-xs font-medium text-text-light">Crop</span>
+              <select className={`${inputClass} mt-1`} value={form.crop} onChange={(e) => setForm((current) => ({ ...current, crop: e.target.value }))}>
+                {CROP_OPTIONS.map((crop) => <option key={crop.id} value={crop.label}>{crop.label}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-text-light">Soil type</span>
+              <select className={`${inputClass} mt-1`} value={form.soilType} onChange={(e) => setForm((current) => ({ ...current, soilType: e.target.value }))}>
+                {SOIL_OPTIONS.map((soil) => <option key={soil} value={soil}>{soil}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-text-light">Crop stage</span>
+              <select className={`${inputClass} mt-1`} value={form.cropStage} onChange={(e) => setForm((current) => ({ ...current, cropStage: e.target.value }))}>
+                {CROP_STAGES.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-text-light">Sowing date</span>
+              <input type="date" className={`${inputClass} mt-1`} value={form.sowingDate} onChange={(e) => setForm((current) => ({ ...current, sowingDate: e.target.value }))} />
+            </label>
+            {error && <p className="text-sm text-alert" role="alert">{error}</p>}
+            <div className="flex gap-3">
+              <Button
+                disabled={saving}
+                onClick={async () => {
+                  setSaving(true);
+                  setError('');
+                  try {
+                    await updateField(selectedFieldId, form);
+                    setEditing(false);
+                  } catch (err) {
+                    setError(apiErrorMessage(err));
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                {saving ? 'Saving...' : 'Save field'}
+              </Button>
+              <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+        <div className="mt-6 pt-4 border-t border-border">
+          {!confirmDelete ? (
+            <Button variant="danger" onClick={() => setConfirmDelete(true)}>Delete field</Button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-text-dark">Remove this field and its saved records?</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    await deleteField(selectedFieldId);
+                    navigate('/app');
+                  }}
+                >
+                  Yes, delete
+                </Button>
+                <Button variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       <section>
         <Link to="/app/report-problem" className="group block">

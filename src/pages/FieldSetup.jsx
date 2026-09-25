@@ -4,6 +4,7 @@ import { Leaf, Check } from 'lucide-react';
 import Button from '../components/Common/Button';
 import { useApp } from '../context/AppContext';
 import { CROP_OPTIONS, SOIL_OPTIONS, CROP_STAGES } from '../data/mockData';
+import { apiErrorMessage } from '../services/api';
 
 const STEPS = ['Farm', 'Crop', 'Field', 'Done'];
 
@@ -14,6 +15,8 @@ export default function FieldSetup() {
   const { completeFieldSetup, farmer } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     farmerName: farmer.name || '',
     farmName: farmer.farmName || '',
@@ -36,9 +39,17 @@ export default function FieldSetup() {
     return true;
   };
 
-  const finish = () => {
-    completeFieldSetup(form);
-    setStep(3);
+  const finish = async () => {
+    setError('');
+    setSaving(true);
+    try {
+      await completeFieldSetup(form);
+      setStep(3);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -239,6 +250,10 @@ export default function FieldSetup() {
               </div>
             )}
 
+            {error && step < 3 && (
+              <p className="mt-4 text-sm text-alert" role="alert">{error}</p>
+            )}
+
             {step < 3 && (
               <div className="mt-8 flex justify-between gap-3">
                 <Button
@@ -253,8 +268,8 @@ export default function FieldSetup() {
                     Continue
                   </Button>
                 ) : (
-                  <Button disabled={!canNext()} onClick={finish}>
-                    Finish setup
+                  <Button disabled={!canNext() || saving} onClick={finish}>
+                    {saving ? 'Saving...' : 'Finish setup'}
                   </Button>
                 )}
               </div>

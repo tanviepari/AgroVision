@@ -15,7 +15,6 @@ import StatusBadge from '../components/Common/StatusBadge';
 import ProgressBar from '../components/Common/ProgressBar';
 import EmptyState from '../components/Common/EmptyState';
 import { useApp } from '../context/AppContext';
-import { weatherData } from '../data/mockData';
 
 const activityIcons = {
   scan: ScanLine,
@@ -46,6 +45,7 @@ export default function FieldOverview() {
     yieldForecasts,
     fieldActivity,
     reportedIssues,
+    weather,
   } = useApp();
 
   if (!fields.length || !selectedField) {
@@ -107,10 +107,19 @@ export default function FieldOverview() {
                 <Sun size={24} className="text-primary" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-text-dark">{weatherData.temperature}°C</p>
-                <p className="text-xs text-text-light mt-0.5">
-                  {weatherData.condition} • Humidity {weatherData.humidity}%
-                </p>
+                {weather.available ? (
+                  <>
+                    <p className="text-2xl font-bold text-text-dark">{weather.temperature}°C</p>
+                    <p className="text-xs text-text-light mt-0.5">
+                      {weather.condition} • Humidity {weather.humidity}%
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-text-dark">Weather</p>
+                    <p className="text-xs text-text-light mt-0.5">{weather.message}</p>
+                  </>
+                )}
               </div>
             </Card>
           </div>

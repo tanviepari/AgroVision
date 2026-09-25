@@ -13,6 +13,8 @@ export default function DiseaseResult() {
     pendingScanResult,
     saveScanResult,
     setPendingScanResult,
+    showToast,
+    apiErrorMessage,
   } = useApp();
   const navigate = useNavigate();
 
@@ -30,9 +32,13 @@ export default function DiseaseResult() {
 
   const result = pendingScanResult;
 
-  const handleSave = () => {
-    saveScanResult(selectedFieldId, result.imagePreview);
-    navigate('/app/history');
+  const handleSave = async () => {
+    try {
+      await saveScanResult(result.id);
+      navigate('/app/history');
+    } catch (err) {
+      showToast(apiErrorMessage(err), 'error');
+    }
   };
 
   return (
@@ -59,6 +65,16 @@ export default function DiseaseResult() {
 
       <Card>
         <p className="text-base text-text-dark leading-relaxed">{result.explanation}</p>
+        {result.disclaimer && (
+          <p className="mt-3 text-sm text-text-light">{result.disclaimer}</p>
+        )}
+        {result.symptoms?.length > 0 && (
+          <ul className="mt-3 list-disc pl-5 text-sm text-text-dark space-y-1">
+            {result.symptoms.map((symptom) => (
+              <li key={symptom}>{symptom}</li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       <Card>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ScanLine,
   AlertCircle,
@@ -22,8 +23,11 @@ const typeMeta = {
 };
 
 export default function FieldHistory() {
-  const { selectedField, selectedFieldId, fieldActivity } = useApp();
+  const { selectedField, selectedFieldId, fieldActivity, loadActivities } = useApp();
   const activity = fieldActivity[selectedFieldId] || [];
+  const [type, setType] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
 
   if (!selectedField) {
     return (
@@ -48,6 +52,30 @@ export default function FieldHistory() {
         <p className="mt-1 text-sm text-text-light">
           Scans, watering, reported problems, and updates for this field.
         </p>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="rounded-xl border border-border bg-white px-3 py-2 text-sm"
+            aria-label="Activity type"
+          >
+            <option value="">All types</option>
+            <option value="disease">Disease scan</option>
+            <option value="problem">Problem</option>
+            <option value="irrigation">Irrigation</option>
+            <option value="yield">Yield</option>
+            <option value="stage">Crop update</option>
+          </select>
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl border border-border bg-white px-3 py-2 text-sm" aria-label="From date" />
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl border border-border bg-white px-3 py-2 text-sm" aria-label="To date" />
+        </div>
+        <button
+          type="button"
+          className="mt-3 text-sm font-semibold text-primary hover:underline"
+          onClick={() => loadActivities(selectedFieldId, { type: type || undefined, from: from || undefined, to: to || undefined })}
+        >
+          Apply filters
+        </button>
       </div>
 
       {activity.length === 0 ? (

@@ -29,11 +29,12 @@ const iconMap = {
 };
 
 export default function ReportProblem() {
-  const { selectedField, selectedFieldId, reportProblem } = useApp();
+  const { selectedField, selectedFieldId, reportProblem, showToast, apiErrorMessage } = useApp();
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
+  const [file, setFile] = useState(null);
   const [saved, setSaved] = useState(false);
   const inputRef = useRef(null);
 
@@ -67,16 +68,20 @@ export default function ReportProblem() {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selected) return;
     const type = PROBLEM_TYPES.find((p) => p.id === selected);
-    reportProblem(selectedFieldId, {
-      type: selected,
-      label: type.label,
-      description,
-      photo,
-    });
-    setSaved(true);
+    try {
+      await reportProblem(selectedFieldId, {
+        type: selected,
+        label: type.label,
+        description,
+        file,
+      });
+      setSaved(true);
+    } catch (err) {
+      showToast(apiErrorMessage(err), 'error');
+    }
   };
 
   return (
@@ -143,6 +148,7 @@ export default function ReportProblem() {
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
+              setFile(file);
               const reader = new FileReader();
               reader.onload = (ev) => setPhoto(ev.target.result);
               reader.readAsDataURL(file);
@@ -154,7 +160,10 @@ export default function ReportProblem() {
               <button
                 type="button"
                 className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-alert text-white text-xs"
-                onClick={() => setPhoto(null)}
+                onClick={() => {
+                  setPhoto(null);
+                  setFile(null);
+                }}
               >
                 ×
               </button>
