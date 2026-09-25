@@ -126,14 +126,35 @@ export default function FieldDetails() {
       </div>
 
       <section>
+        <Link to="/app/report-problem" className="group block">
+          <Card className="!p-5 flex flex-col sm:flex-row sm:items-center gap-4 border border-warning/15 bg-warning-soft/25 hover:shadow-md transition-shadow">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-warning text-white">
+              <AlertCircle size={20} aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-serif text-lg font-bold text-text-dark">
+                Report a problem
+              </h2>
+              <p className="mt-1 text-sm text-text-light">
+                Something looking off in this field? Save it so it shows up in your field
+                history.
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-primary group-hover:underline shrink-0">
+              Report now →
+            </span>
+          </Card>
+        </Link>
+      </section>
+
+      <section>
         <h2 className="font-serif text-xl font-bold text-primary mb-4">Go to</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { to: '/app/disease-scan', label: 'Disease Scan', icon: ScanLine },
             { to: '/app/irrigation', label: 'Irrigation', icon: Droplets },
             { to: '/app/yield', label: 'Yield Forecast', icon: Wheat },
             { to: '/app/history', label: 'Field History', icon: History },
-            { to: '/app/report-problem', label: 'Report Problem', icon: AlertCircle },
           ].map(({ to, label, icon: Icon }) => (
             <Link key={to} to={to}>
               <Card className="!p-4 flex items-center gap-3 hover:shadow-md transition-shadow">

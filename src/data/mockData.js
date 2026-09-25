@@ -36,6 +36,13 @@ export const CROP_STAGES = [
 
 export const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu'];
 
+/** Simple weather for Field Overview hero */
+export const weatherData = {
+  temperature: 24,
+  condition: 'Clear & Sunny',
+  humidity: 42,
+};
+
 /** Initial farmer profile */
 export const initialFarmer = {
   id: 'farmer-1',
